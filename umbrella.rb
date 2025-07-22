@@ -5,9 +5,11 @@ require "dotenv/load"
 require "active_support/all"
 
 puts "What is your location?"
-#location = gets.chomp.gsub(" ", "%20")
+location = gets.chomp.gsub(" ", "%20").capitalize
 #location = "Chicago"
-location = "Kissimmee"
+#location = "Kissimmee"
+
+puts "Checking the weather at " + location + "...."
 
 maps_url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + location + "&key=" + ENV.fetch("GMAPS_KEY") 
 
@@ -46,16 +48,15 @@ current_temp = currently_hash.fetch("temperature")
 
 puts "The current temperature is " + current_temp.to_s + "°F."
 
-hour = parsed_response.fetch("hourly")
+#for getting hourly precipProbability
+next_hour = parsed_response.fetch("hourly").fetch("data")
 
-next_hour = hour.fetch("data")
+# to get summary that would happen within the hour
+minute = parsed_response.fetch("minutely")
 
-next_hour_temp = next_hour[1].fetch("temperature")
+summary = minute.fetch("summary")
 
-next_hour_sum = next_hour[1].fetch("summary")
-
-
-puts "The temperature for the next hour is " + next_hour_temp.to_s + "°F and the summary is " + next_hour_sum.to_s + "."
+puts "Next hour: " + summary + "."
 
 =begin
 For each of the next twelve hours, check if the precipitation probability is greater than 10%.
@@ -97,7 +98,7 @@ while count <= 13
  #no need to print all that just check if it is greater than 10 and then break
   if next_hour[count].fetch("precipProbability") >= 0.10
     puts "In " + count.to_s + " hour(s), there is a " + (next_hour[count].fetch("precipProbability") * 100).to_fs(:percentage, { :precision => 0 } ) + " chance of rain." 
-    p next_hour[count].fetch("precipProbability")
+    
     is_rainy = true
   break
   
