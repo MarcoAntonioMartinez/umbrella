@@ -6,8 +6,8 @@ require "active_support/all"
 
 puts "What is your location?"
 #location = gets.chomp.gsub(" ", "%20")
-location = "Chicago"
-
+#location = "Chicago"
+location = "Kissimmee"
 
 maps_url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + location + "&key=" + ENV.fetch("GMAPS_KEY") 
 
@@ -79,15 +79,35 @@ For each of the next twelve hours, check if the precipitation probability is gre
 #precipProbability
 
 count = 1
-puts next_hour[3].fetch("precipProbability").to_fs(:percentage, { :precision => 0 } )
-while count <=13
+
+#maybe get rid of this line
+#puts next_hour[3].fetch("precipProbability").to_fs(:percentage, { :precision => 0 } )
+#count at 0 = current hour so 1 is next hour
+is_rainy = false
+
+=begin
+next_hour.each do |hour| 
+  if hour.fetch("precipProbability") >= 0.10
+    puts "In " + count.to_s + " hours, there is a " + (next_hour[count].fetch("precipProbability") * 100)..to_fs(:percentage, { :precision => 0 } ) + " chance of rain." 
+=end
+
+#alternate loop would be with next_hour.each with an if to skip current hour using Time.at or 
+    # use range to go from first element + 1 to last element
+while count <= 13
  #no need to print all that just check if it is greater than 10 and then break
   if next_hour[count].fetch("precipProbability") >= 0.10
-    puts "You might want to carry an umbrella!"
+    puts "In " + count.to_s + " hour(s), there is a " + (next_hour[count].fetch("precipProbability") * 100).to_fs(:percentage, { :precision => 0 } ) + " chance of rain." 
+    p next_hour[count].fetch("precipProbability")
+    is_rainy = true
+  break
   
-  else
-    puts "You probably won't need an umbrella today."
   end
 
   count+=1
+end
+
+if is_rainy
+  puts "You might want to carry an umbrella!"
+else
+  puts "You probably won't need an umbrella today."
 end
