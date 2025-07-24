@@ -3,8 +3,14 @@ require "http"
 require "json"
 require "dotenv/load"
 require "active_support/all"
+require "ascii_charts"
+
+puts "========================================"
+puts "   Will you need an umbrella today?"
+puts "========================================\n\n"
 
 puts "What is your location?"
+
 location = gets.chomp.gsub(" ", "%20").capitalize
 #location = "Chicago"
 #location = "Kissimmee"
@@ -51,52 +57,27 @@ puts "The current temperature is " + current_temp.to_s + "°F."
 #for getting hourly precipProbability
 next_hour = parsed_response.fetch("hourly").fetch("data")
 
-# to get summary that would happen within the hour
+#to get summary that would happen within the hour
 minute = parsed_response.fetch("minutely")
 
 summary = minute.fetch("summary")
 
 puts "Next hour: " + summary + "."
 
-=begin
-For each of the next twelve hours, check if the precipitation probability is greater than 10%.
-    
-      
-        
-      If so, print a message saying how many hours from now and what the precipitation probability is.
-        
-      
-    
-  
-    
-  
-  
-    
-      If any of the next twelve hours has a precipitation probability greater than 10%, print “You might want to carry an umbrella!”
 
-    If not, print “You probably won’t need an umbrella today.”
-=end
-
-#precipProbability
-
+#count for hour index, 0 is current hour
 count = 1
-
-#maybe get rid of this line
-#puts next_hour[3].fetch("precipProbability").to_fs(:percentage, { :precision => 0 } )
-#count at 0 = current hour so 1 is next hour
 is_rainy = false
-
-=begin
-next_hour.each do |hour| 
-  if hour.fetch("precipProbability") >= 0.10
-    puts "In " + count.to_s + " hours, there is a " + (next_hour[count].fetch("precipProbability") * 100)..to_fs(:percentage, { :precision => 0 } ) + " chance of rain." 
-=end
 
 #alternate loop would be with next_hour.each with an if to skip current hour using Time.at or 
     # use range to go from first element + 1 to last element
-while count <= 13
- #no need to print all that just check if it is greater than 10 and then break
-  if next_hour[count].fetch("precipProbability") >= 0.10
+
+#keep track of probabilities
+rain_chance = []
+while count <= 12
+  
+ #break once probability > 10% is found
+ if next_hour[count].fetch("precipProbability") >= 0.10
     puts "In " + count.to_s + " hour(s), there is a " + (next_hour[count].fetch("precipProbability") * 100).to_fs(:percentage, { :precision => 0 } ) + " chance of rain." 
     
     is_rainy = true
@@ -106,6 +87,19 @@ while count <= 13
 
   count+=1
 end
+
+#loop through next 12 hrs to make y axis (rain chance)
+next_hour[1..12].each_with_index do |h, count|
+  
+  rain_chance.push((h.fetch("precipProbability") * 100).to_i)
+  #hours.push(count)
+
+end
+
+#Make the histogram for rain chance
+puts AsciiCharts::Cartesian.new((1..12).to_a.map{|x| [x, rain_chance[x-1]]}, :bar => true, :hide_zero => true, :title => "Hours from now vs Precipation probability" ).draw
+
+
 
 if is_rainy
   puts "You might want to carry an umbrella!"
